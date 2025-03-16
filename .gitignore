@@ -1,0 +1,26 @@
+# node_modules 폴더 무시
+node_modules/
+
+# 환경 변수 파일 무시 (보안 관련)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 로그 파일 무시
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 빌드된 파일 무시
+dist/
+build/
+
+# 캐시 파일 무시
+.cache/
+.vscode/
+.idea/
+.DS_Store
+*.log
