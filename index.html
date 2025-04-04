@@ -24,7 +24,7 @@
                 return;
             }
 
-            $("meetingContainer").show();
+            $("#meetingContainer").show();
 
             MyApp._init(user_id, meeting_id);
         })
@@ -37,7 +37,7 @@
         <div class="g-top text-light">
             <!-- 메인 비디오 컨테이너 -->
             <div class="top-remote-video-show-wrap d-flex">
-                <div id="meetingContainer" class="w-75 d-none">
+                <div id="meetingContainer" class="w-75" style="display:none">
                     <div class="call-wrap" style="background-color: black;">
                         <div class="video-wrap" id="divUsers" style="display: flex; flex-wrap: wrap;">
                             
@@ -98,7 +98,7 @@
                     <span class="material-icons text-danger">call</span>
                 </div>
 
-                <div class="video-toggle-wrap action-icon-style display-center cursor-pointer">
+                <div class="video-toggle-wrap action-icon-style display-center cursor-pointer" id="videoCamOnOff">
                     <span class="material-icons">videocam_off</span>
                 </div>
             </div>
