@@ -44,7 +44,9 @@ var AppProcess = function () {
     ],
   };
 
+  // 이벤트 처리 함수: 마이크, 비디오, 화면 공유 버튼 이벤트 설정
   function eventProcess() {
+    // 마이크 음소거/해제 버튼 클릭 이벤트
     $("#micMuteUnmute").on("click", async function () {
       if (!audio) {
         await loadAudio();
@@ -56,15 +58,21 @@ var AppProcess = function () {
 
       if (isAudioMute) {
         audio.enabled = true;
-        $(this).html("<span class='material-icons'>mic</span>");
+        $(this).html(
+          "<span class='material-icons' style='width: 100%;'>mic</span>"
+        );
         updateMediaSenders(audio, rtp_aud_senders);
       } else {
         audio.enabled = false;
-        $(this).html("<span class='material-icons'>mic_off</span>");
+        $(this).html(
+          "<span class='material-icons' style='width: 100%;'>mic_off</span>"
+        );
         removeMediaSenders(rtp_aud_senders);
       }
       isAudioMute = !isAudioMute;
     });
+
+    // 카메라 켜기/끄기 버튼 클릭 이벤트
     $("#videoCamOnOff").on("click", async function () {
       if (video_st == video_states.Camera) {
         await videoProcess(video_states.None);
@@ -72,8 +80,32 @@ var AppProcess = function () {
         await videoProcess(video_states.Camera);
       }
     });
+
+    // 화면 공유 켜기/끄기 버튼 클릭 이벤트
+    $("#ScreenShareOnOff").on("click", async function () {
+      if (video_st == video_states.ScreenShare) {
+        await videoProcess(video_states.None);
+      } else {
+        await videoProcess(video_states.ScreenShare);
+      }
+    });
   }
 
+  async function loadAudio() {
+    try {
+      var astream = await navigator.mediaDevices.getUserMedia({
+        video: false,
+        audio: true,
+      });
+      audio = astream.getAudioTracks()[0];
+      audio.enabled = false;
+    } catch (e) {
+      console.error("오디오 장치 로드 중 오류 발생:", e);
+      return;
+    }
+  }
+
+  // 연결 상태 확인 함수
   function connection_status(connection) {
     console.log("connection_status:::", connection.connectionState);
     if (
@@ -87,6 +119,7 @@ var AppProcess = function () {
     }
   }
 
+  // 미디어 송신자 업데이트 함수: 모든 연결된 피어에게 미디어 트랙 전송
   async function updateMediaSenders(track, rtp_senders) {
     console.log("track::", track);
     console.log("rtp_senders::", rtp_senders);
@@ -103,7 +136,44 @@ var AppProcess = function () {
     }
   }
 
+  // 미디어 송신자 제거 함수: 모든 연결된 피어에서 미디어 트랙 제거
+  function removeMediaSenders(rtp_senders) {
+    for (var con_id in peers_connection_ids) {
+      if (rtp_senders[con_id] && connection_status(peers_connection[con_id])) {
+        peers_connection[con_id].removeTrack(rtp_senders[con_id]);
+        rtp_senders[con_id] = null;
+      }
+    }
+  }
+
+  // 비디오 스트림 제거 함수: 로컬 비디오 트랙 중지 및 제거
+  function removeVideoStream(rtp_vid_senders) {
+    if (videoCamTrack) {
+      videoCamTrack.stop();
+      videoCamTrack = null;
+      local_div.srcObject = null;
+      removeMediaSenders(rtp_vid_senders);
+    }
+  }
+
+  // 비디오 처리 함수: 카메라 또는 화면 공유 상태 변경
   async function videoProcess(newVideoState) {
+    if (newVideoState == video_states.None) {
+      $("#videoCamOnOff").html(
+        "<span class='material-icons' style='width: 100%;'>videocam_off</span>"
+      );
+
+      video_st = newVideoState;
+      removeVideoStream(rtp_vid_senders);
+      return;
+    }
+
+    if (newVideoState == video_states.Camera) {
+      $("#videoCamOnOff").html(
+        "<span class='material-icons' style='width: 100%;'>videocam_on</span>"
+      );
+    }
+
     try {
       var vstream = null;
       if (newVideoState == video_states.Camera) {

@@ -54,7 +54,7 @@
                                 <h2 class="display-center" style="font-size: 14px;"></h2>
                                 <div class="display-center">
                                     <video autoplay muted></video>
-                                    <video autoplay muted style="display: none;"></video>
+                                    <video autoplay controls style="display: none;"></video>
                                 </div>
                             </div>
 
@@ -91,7 +91,7 @@
             <!-- 하단 중앙: 주요 컨트롤 버튼들 -->
             <div class="bottom-middle d-flex justify-content-center align-items-center" style="height: 10vh;">
                 <div class="mic-toggle-wrap action-icon-style display-center m-2 cursor-pointer" id="micMuteUnmute">
-                    <span class="material-icons">mic_off</span>
+                    <span class="material-icons" style="width: 100%;">mic_off</span>
                 </div>
 
                 <div class="end-call-wrap action-icon-style display-center mr-2 cursor-pointer">
@@ -99,13 +99,13 @@
                 </div>
 
                 <div class="video-toggle-wrap action-icon-style display-center cursor-pointer" id="videoCamOnOff">
-                    <span class="material-icons">videocam_off</span>
+                    <span class="material-icons" style="width: 100%;">videocam_off</span>
                 </div>
             </div>
 
             <!-- 하단 오른쪽: 추가 기능 버튼들 -->
             <div class="bottom-right d-flex justify-content-center align-items-center mr-3" style="height: 10vh;">
-                <div class="present-now-wrap d-flex justify-content-center flex-column align-items-center mr-5 cursor-pointer">
+                <div class="present-now-wrap d-flex justify-content-center flex-column align-items-center mr-5 cursor-pointer" id="ScreenShareOnOff">
                     <span class="material-icons">present_to_all</span>
                     <div>Present Now</div>
                 </div>
