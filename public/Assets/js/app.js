@@ -27,11 +27,13 @@ var AppProcess = function () {
   var video_st = video_states.None; // 비디오 상태 변수
   var videoCamTrack; // 비디오 카메라 트랙 객체
   var rtp_vid_senders = []; // 비디오 RTP 송신자 목록
+  var screenShareStoppedCallback = null;
 
   // 초기화 함수: 시그널링 서버와의 데이터 교환 함수 및 내 연결 ID 설정
-  async function init(SDP_function, my_connId) {
+  async function init(SDP_function, my_connId, onScreenShareStoppedCallback) {
     serverProcess = SDP_function;
     myConnId = my_connId;
+    screenShareStoppedCallback = onScreenShareStoppedCallback; // 💡 추가된 부분
     eventProcess();
     local_div = document.getElementById("localVideoPlayer"); // 로컬 비디오 플레이어 초기화
   }
@@ -128,9 +130,11 @@ var AppProcess = function () {
       if (connection_status(peers_connection[con_id])) {
         if (rtp_senders[con_id] && rtp_senders[con_id].track) {
           rtp_senders[con_id].replaceTrack(track);
+          console.log("replaceTrack::", rtp_senders[con_id]);
         } else {
           rtp_senders[con_id] =
             peers_connection[peers_connection_ids[con_id]].addTrack(track);
+          console.log("addTrack::", rtp_senders[con_id]);
         }
       }
     }
@@ -163,19 +167,27 @@ var AppProcess = function () {
         "<span class='material-icons' style='width: 100%;'>videocam_off</span>"
       );
 
+      $("#ScreenShareOnOff").html(
+        "<span class='material-icons'>present_to_all</span><div>Present Now</div>"
+      );
+
+      const wasScreenSharing = video_st === video_states.ScreenShare; // 현재 상태를 기반으로 판단해야 함
+
       video_st = newVideoState;
       removeVideoStream(rtp_vid_senders);
-      return;
-    }
 
-    if (newVideoState == video_states.Camera) {
-      $("#videoCamOnOff").html(
-        "<span class='material-icons' style='width: 100%;'>videocam_on</span>"
-      );
+      // 화면 공유 중이었다면 콜백 실행
+      if (typeof screenShareStoppedCallback === "function") {
+        console.log("✅ Calling screenShareStoppedCallback()");
+        screenShareStoppedCallback();
+      }
+
+      return;
     }
 
     try {
       var vstream = null;
+
       if (newVideoState == video_states.Camera) {
         vstream = await navigator.mediaDevices.getUserMedia({
           video: {
@@ -192,7 +204,31 @@ var AppProcess = function () {
           },
           audio: false,
         });
+        vstream.oninactive = (e) => {
+          removeVideoStream(rtp_vid_senders);
+          $("#ScreenShareOnOff").html(
+            "<span class='material-icons'>present_to_all</span><div>Present Now</div>"
+          );
+        };
       }
+      video_st = newVideoState;
+
+      if (newVideoState == video_states.Camera) {
+        $("#videoCamOnOff").html(
+          "<span class='material-icons' style='width: 100%;'>videocam</span>"
+        );
+        $("#ScreenShareOnOff").html(
+          "<span class='material-icons'>present_to_all</span><div>Present Now</div>"
+        );
+      } else if (newVideoState == video_states.ScreenShare) {
+        $("#videoCamOnOff").html(
+          "<span class='material-icons' style='width: 100%;'>videocam_off</span>"
+        );
+        $("#ScreenShareOnOff").html(
+          "<span class='material-icons text-success'>present_to_all</span><div class='text-success'>Stop Present</div>"
+        );
+      }
+
       if (vstream && vstream.getVideoTracks().length > 0) {
         videoCamTrack = vstream.getVideoTracks()[0];
         if (videoCamTrack) {
@@ -206,7 +242,6 @@ var AppProcess = function () {
       console.error("미디어 스트림을 가져오는 중 오류 발생:", e);
       return;
     }
-    video_st = newVideoState;
   }
 
   // 새로운 피어와의 연결을 위한 RTCPeerConnection 객체 생성
@@ -297,6 +332,34 @@ var AppProcess = function () {
     );
   }
 
+  async function closeConnection(connId) {
+    peers_connection_ids[connId] = null; // 연결 ID 초기화
+
+    if (peers_connection[connId]) {
+      peers_connection[connId].close(); // 연결 종료
+      peers_connection[connId] = null; // 연결 객체 초기화
+    }
+
+    if (remote_aud_stream[connId]) {
+      remote_aud_stream[connId].getAudioTracks().forEach((t) => {
+        if (t.stop) {
+          t.stop(); // 트랙 중지
+        }
+
+        remote_aud_stream[connId] = null; // 오디오 스트림 초기화
+      });
+    }
+
+    if (remote_vid_stream[connId]) {
+      remote_vid_stream[connId].getTracks().forEach((t) => {
+        if (t.stop) {
+          t.stop(); // 트랙 중지
+        }
+        remote_vid_stream[connId] = null; // 오디오 스트림 초기화
+      });
+    }
+  }
+
   // SDP 메시지를 처리하는 함수 (offer 또는 answer 수신 처리)
   async function SDPProcess(message, from_connId) {
     message = JSON.parse(message);
@@ -337,16 +400,34 @@ var AppProcess = function () {
     }
   }
 
+  async function closeShareScreen(connId) {
+    if (remote_vid_stream[connId]) {
+      remote_vid_stream[connId].getTracks().forEach((t) => {
+        if (t.stop) {
+          t.stop(); // 트랙 중지
+        }
+
+        remote_vid_stream[connId] = null; // 오디오 스트림 초기화
+      });
+    }
+  }
+
   // 외부에서 사용할 함수 노출
   return {
     setNewConnection: async function (connId) {
       await setNewConnection(connId);
     },
-    init: async function (SDP_function, my_connId) {
-      await init(SDP_function, my_connId);
+    init: async function (SDP_function, my_connId, onScreenShareStopped) {
+      await init(SDP_function, my_connId, onScreenShareStopped);
     },
     processClientFunc: async function (data, from_connId) {
       await SDPProcess(data, from_connId);
+    },
+    closeConnectionCall: async function (connId) {
+      await closeConnection(connId);
+    },
+    closeShareScreen: async function (connId) {
+      await closeShareScreen(connId);
     },
   };
 };
@@ -385,7 +466,7 @@ var MyApp = (function () {
     socket.on("connect", () => {
       if (socket.connected) {
         // AppProcess 모듈 초기화
-        app.init(SDP_function, socket.id);
+        app.init(SDP_function, socket.id, onScreenShareStopped);
 
         if (user_id != "" && meeting_id != "") {
           // 사용자 접속 정보 서버에 알림
@@ -397,6 +478,10 @@ var MyApp = (function () {
       }
     });
 
+    socket.on("inform_other_about_disconnected_user", function (data) {
+      $("#" + data.connId).remove(); // UI에서 사용자 제거
+      app.closeConnectionCall(data.connId);
+    });
     // 다른 유저가 접속했음을 알림 받았을 때
     socket.on("inform_others_about_me", (data) => {
       // UI에 사용자 추가
@@ -417,6 +502,12 @@ var MyApp = (function () {
       }
     });
 
+    //화면 공유 제가 알림 받았을 때
+    socket.on("infrom_other_share_closed", function (data) {
+      console.log("infrom_other_share_closed::", data);
+      app.closeShareScreen(data.connId); // 화면 공유 종료
+    });
+
     // 시그널링 메시지 수신 시 처리
     socket.on("SDPProcess", async function (data) {
       await app.processClientFunc(data.message, data.from_connId);
@@ -432,6 +523,14 @@ var MyApp = (function () {
     newDivId.find("audio").attr("id", "a_" + connId); // 오디오 ID 지정
     newDivId.show(); // 화면에 표시
     $("#divUsers").append(newDivId); // UI에 추가
+  }
+
+  function onScreenShareStopped() {
+    console.log("screen_share_stopped emit 시도 중...");
+    socket.emit("screen_share_stopped", {
+      from: user_id,
+      meetingid: meeting_id,
+    });
   }
 
   // 외부 접근 가능 함수
