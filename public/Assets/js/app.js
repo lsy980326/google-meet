@@ -448,6 +448,7 @@ var MyApp = (function () {
     $("#me h2").text(user_id + "(Me)"); // 사용자 이름 표시
     document.title = user_id + " - WebRTC"; // 브라우저 제목 설정
     event_process_for_signaling_server(); // 시그널링 서버 연결 처리
+    eventHandeling(); // 이벤트 핸들링 설정
   }
 
   // 시그널링 서버와의 이벤트 통신 처리 함수
@@ -513,6 +514,56 @@ var MyApp = (function () {
     // 시그널링 메시지 수신 시 처리
     socket.on("SDPProcess", async function (data) {
       await app.processClientFunc(data.message, data.from_connId);
+    });
+
+    socket.on("showChatMessage", function (data) {
+      console.log("showChatMessage", data);
+      // 채팅 메시지 수신 시 처리
+      var time = new Date();
+      var lTime = time.toLocaleTimeString("ko-KR", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      });
+      var div = $("<div>").html(
+        "<span class='font-weight-bold mr-3' style='color:black'>" +
+          data.from +
+          "</span><span class='text-muted'>" +
+          lTime +
+          "</span><br>" +
+          data.message
+      );
+      $("#messages").append(div); // 메시지 UI에 추가
+    });
+  }
+
+  socket.on("showChatMessage", function (data) {
+    var time = new Date();
+  });
+
+  // 이벤트 핸들링 설정
+  function eventHandeling() {
+    // 회의 종료 버튼 클릭 시
+    $("#btnsend").on("click", function () {
+      var msg = $("#msgbox").val();
+      socket.emit("sendMessage", msg); // 메시지 전송
+      // 채팅 메시지 수신 시 처리
+      var time = new Date();
+      var lTime = time.toLocaleTimeString("ko-KR", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      });
+      var div = $("<div>").html(
+        "<span class='font-weight-bold mr-3' style='color:black'>" +
+          user_id +
+          "</span><span class='text-muted'>" +
+          lTime +
+          "</span><br>" +
+          msg
+      );
+      $("#messages").append(div); // 메시지 UI에 추가
+      $("#msgbox").val("");
     });
   }
 

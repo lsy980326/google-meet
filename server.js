@@ -65,6 +65,25 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("sendMessage", (msg) => {
+    console.log("sendMessage", msg);
+    var mUser = userConnections.find((p) => p.connectionId == socket.id); // 현재 소켓 ID에 해당하는 사용자 정보 찾기
+    if (mUser) {
+      console.log(mUser);
+      var meetingid = mUser.meeting_id; // 회의 ID 저장
+      var from = mUser.user_id; // 사용자 이름 저장
+      var list = userConnections.filter((p) => p.meeting_id == meetingid); // 같은 회의 ID를 가진 사용자 목록 필터링
+      list.forEach((v) => {
+        // 각 사용자에게 메시지 전송
+        socket.to(v.connectionId).emit("showChatMessage", {
+          from: from, // 메시지를 보낸 사용자 이름
+          message: msg, // 메시지 내용
+          connId: socket.id, // 보낸 사람의 소켓 ID
+        });
+      });
+    }
+  });
+
   socket.on("disconnect", function () {
     console.log("user disconnected", socket.id); // 소켓 연결 해제 시 메시지 출력
 
