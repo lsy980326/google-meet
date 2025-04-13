@@ -478,11 +478,13 @@ var MyApp = (function () {
       }
     });
 
+    // 소켓 연결 해제 시
     socket.on("inform_other_about_disconnected_user", function (data) {
       $("#" + data.connId).remove(); // UI에서 사용자 제거
       app.closeConnectionCall(data.connId);
     });
-    // 다른 유저가 접속했음을 알림 받았을 때
+
+    // 다른 유저가 접속했을 때
     socket.on("inform_others_about_me", (data) => {
       // UI에 사용자 추가
       addUser(data.other_user_id, data.connId);
