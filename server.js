@@ -44,12 +44,16 @@ io.on("connection", (socket) => {
       meeting_id: data.meetingid, // 회의방 ID
     });
 
+    var userCount = userConnections.length; // 현재 접속한 사용자 수
+    console.log("userCount", userCount); // 현재 사용자 수 출력
+
     // 같은 회의방에 있는 다른 사용자들에게 현재 접속한 사용자의 정보를 알림
     other_users.forEach((v) => {
       // 개별 사용자에게 알림 전송 (broadcast는 아님)
       socket.to(v.connectionId).emit("inform_others_about_me", {
         other_user_id: data.displayName, // 접속한 사용자 이름
         connId: socket.id, // 접속한 사용자의 소켓 ID
+        userNumber: userCount, // 현재 접속한 사용자 수
       });
     });
 

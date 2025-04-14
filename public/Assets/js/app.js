@@ -488,17 +488,20 @@ var MyApp = (function () {
     // 다른 유저가 접속했을 때
     socket.on("inform_others_about_me", (data) => {
       // UI에 사용자 추가
-      addUser(data.other_user_id, data.connId);
+      addUser(data.other_user_id, data.connId, data.userNumber);
       // WebRTC 연결 생성
       app.setNewConnection(data.connId);
     });
 
     // 다른 유저가 접속했음을 알림 받았을 때
     socket.on("inform_me_about_other_user", (other_users) => {
+      var userNumber = other_users.length; // 현재 접속한 사용자 수
+      var userNumb = userNumber + 1; // 나 포함
+
       if (other_users) {
         other_users.forEach(function (other) {
           // UI에 사용자 추가
-          addUser(other.user_id, other.connectionId);
+          addUser(other.user_id, other.connectionId, userNumb);
           // WebRTC 연결 생성
           app.setNewConnection(other.connectionId);
         });
@@ -537,10 +540,6 @@ var MyApp = (function () {
     });
   }
 
-  socket.on("showChatMessage", function (data) {
-    var time = new Date();
-  });
-
   // 이벤트 핸들링 설정
   function eventHandeling() {
     // 회의 종료 버튼 클릭 시
@@ -568,7 +567,7 @@ var MyApp = (function () {
   }
 
   // 새로운 유저 UI 추가 함수
-  function addUser(other_user_id, connId) {
+  function addUser(other_user_id, connId, userNum) {
     var newDivId = $("#otherTemplate").clone(); // 템플릿 복사
     newDivId = newDivId.attr("id", connId).addClass("other");
     newDivId.find("h2").text(other_user_id); // 이름 표시
@@ -576,6 +575,16 @@ var MyApp = (function () {
     newDivId.find("audio").attr("id", "a_" + connId); // 오디오 ID 지정
     newDivId.show(); // 화면에 표시
     $("#divUsers").append(newDivId); // UI에 추가
+
+    $(".in-call-wrap-up").append(
+      ' <div class="in-call-wrap d-flex justify-content-between align-items-center mb-3" id="participant_' +
+        connId +
+        '"> <div class="participant-img-name-wrap display-center cursor-pointer"> <div class="participant-img"> <img src="public/Assets/images/other.jpg" alt="" class="border border-secondary" style="height: 40px; width: 40px; border-radius: 50%;"> </div> <div class="participant-name ml-2">' +
+        other_user_id +
+        '</div> </div> <div class="participant-action-wrap display-center"> <div class="participant-action-dot display-center mr-2 cursor-pointer"> <span class="material-icons">more_vert</span> </div> <div class="participant-action-pin display-center mr-2 cursor-pointer"> <span class="material-icons">push_pin</span> </div> </div> </div>'
+    ); // 사용자 목록에 추가
+
+    $(".participant-count").text(userNum); // 사용자 수 업데이트
   }
 
   function onScreenShareStopped() {
@@ -585,6 +594,16 @@ var MyApp = (function () {
       meetingid: meeting_id,
     });
   }
+
+  $(document).on("click", ".people-heading", function () {
+    $(".in-call-wrap-up").show(300);
+    $(".chat-show-wrap").hide(300);
+  });
+
+  $(document).on("click", ".chat-heading", function () {
+    $(".in-call-wrap-up").hide(300);
+    $(".chat-show-wrap").show(300);
+  });
 
   // 외부 접근 가능 함수
   return {
