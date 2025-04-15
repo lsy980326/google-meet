@@ -624,12 +624,16 @@ var MyApp = (function () {
   });
 
   $(document).on("click", ".top-left-participant-wrap", function () {
+    $(".people-heading").addClass("active");
+    $(".chat-heading").removeClass("active");
     $(".g-right-details-wrap").show(300);
     $(".in-call-wrap-up").show(300);
     $(".chat-show-wrap").hide(300);
   });
 
   $(document).on("click", ".top-left-chat-wrap", function () {
+    $(".people-heading").removeClass("active");
+    $(".chat-heading").addClass("active");
     $(".g-right-details-wrap").show(300);
     $(".in-call-wrap-up").hide(300);
     $(".chat-show-wrap").show(300);
@@ -656,6 +660,17 @@ var MyApp = (function () {
     });
   });
 
+  $(document).mouseup(function (e) {
+    var container = new Array();
+    container.push($(".g-details"));
+    container.push($(".g-right-details-wrap"));
+    $.each(container, function (key, value) {
+      if (!$(value).is(e.target) && $(value).has(e.target).length === 0) {
+        $(value).hide(300);
+      }
+    });
+  });
+
   $(document).on("click", ".call-cancel-action", function () {
     $(".top-box-show").html("");
   });
@@ -670,6 +685,24 @@ var MyApp = (function () {
     setTimeout(function () {
       $(".link-conf").hide();
     }, 2000);
+  });
+
+  $(document).on("click", ".meeting-details-button", function () {
+    $(".g-details").slideDown(300);
+  });
+
+  $(document).on("click", ".g-details-heading-attachment", function () {
+    $(".g-details-heading-show").hide();
+    $(".g-details-heading-show-attachment").show();
+    $(this).addClass("active");
+    $(".g-details-heading-detail").removeClass("active");
+  });
+
+  $(document).on("click", ".g-details-heading-detail", function () {
+    $(".g-details-heading-show").show();
+    $(".g-details-heading-show-attachment").hide();
+    $(this).addClass("active");
+    $(".g-details-heading-attachment").removeClass("active");
   });
 
   // 외부 접근 가능 함수

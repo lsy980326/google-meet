@@ -155,8 +155,9 @@
         <div class="g-bottom bg-light m-0 d-flex justify-content-between align-items-center">
             <!-- 하단 왼쪽: 미팅 상세 정보 -->
             <div class="bottom-left d-flex" style="height:10vh;">
-                <div class="g-details border border-success mb-2">
-                    <div class="g-details-heading d-flex justify-content-between align-items-center border-bottom">
+
+                <div class="g-details border border-success mb-2" style="display: none; min-height: 20vh;">
+                    <div class="g-details-heading d-flex justify-content-between align-items-center border-bottom pb-1">
                         
                         <div class="g-details-heading-detail d-flex align-items-center cursor-pointer">
                             <span class="material-icons">
@@ -183,6 +184,22 @@
                                 <span class="copy_info font-weight-bold">Copy Joining Info
                                     <span style="display: none; background-color: aquamarine; border-radius: 5px;" class="link-conf font-weight-bold p-1">Link Copied</span>
                                 </span>
+                            </div>
+                        </div>
+                        <div class="g-details-heading-show-attachment" style="display: none; position: relative;">
+                            <div class="show-attach-file"></div>
+                            <div class="upload-attach-file">
+                                <form enctype="multipart/form-data" ref="uploadForm" action="" class="display-center" id="uploadForm" style="justify-content: space-between;">
+                                    <div class="custom-file" style="flex-basis: 79%;">
+                                        <input type="file" class="custom-file-input" id="customFile" name="imageFile">
+                                        <label class="custom-file-label">Choose file</label>
+                                    </div>
+                                    <div class="share-button-wrap">
+                                        <button class="btn btn-primary btn-sm share-attach" style="flex-basis: 19%; padding: 6px 20px;">
+                                        Share
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>

@@ -123,7 +123,7 @@ img.signin-image {
 }
 
 .g-bottom {
-    /*    height: 10vh;*/
+    height: 15vh;
     margin: 0 -10px !important;
     padding: 0 20px;
     box-shadow: 0px 0px 5px black;
