@@ -570,6 +570,10 @@ var MyApp = (function () {
 
     var url = window.location.href;
     $(".meeting_url").text(url); // 회의 URL 표시
+
+    $("#divUsers").on("dblclick", "video", function () {
+      this.requestFullscreen(); // 비디오 클릭 시 전체 화면 모드로 전환
+    });
   }
 
   // 새로운 유저 UI 추가 함수
