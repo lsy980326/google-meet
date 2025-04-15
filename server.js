@@ -94,14 +94,20 @@ io.on("connection", (socket) => {
     var disuser = userConnections.find((p) => p.connectionId == socket.id); // 연결 해제된 소켓 ID 찾기
     if (disuser) {
       var meeting_id = disuser.meeting_id; // 회의 ID 저장
-      userConnections.filter((p) => p.connectionId != socket.id); // 연결 해제된 소켓 ID 제거
+      userConnections = userConnections.filter(
+        (p) => p.connectionId != socket.id
+      ); // 연결 해제된 소켓 ID 제거
 
       var list = userConnections.filter((p) => p.meeting_id == meeting_id); // 같은 회의 ID를 가진 사용자 목록 필터링
       list.forEach((v) => {
+        var userNumberAffUserLeave = userConnections.length; // 현재 사용자 수 저장
+        console.log("userNumberAffUserLeave", userNumberAffUserLeave); // 현재 사용자 수 출력
+
         // 각 사용자에게 연결 해제된 사용자 정보를 알림
         socket.to(v.connectionId).emit("inform_other_about_disconnected_user", {
           disuser_id: disuser.user_id, // 연결 해제된 사용자 이름
           connId: socket.id, // 연결 해제된 소켓 ID
+          uNumber: userNumberAffUserLeave, // 현재 사용자 수
         });
       });
     }
