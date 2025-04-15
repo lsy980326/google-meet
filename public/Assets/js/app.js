@@ -567,6 +567,9 @@ var MyApp = (function () {
       $("#messages").append(div); // 메시지 UI에 추가
       $("#msgbox").val("");
     });
+
+    var url = window.location.href;
+    $(".meeting_url").text(url); // 회의 URL 표시
   }
 
   // 새로운 유저 UI 추가 함수
@@ -651,6 +654,18 @@ var MyApp = (function () {
 
   $(document).on("click", ".call-cancel-action", function () {
     $(".top-box-show").html("");
+  });
+
+  $(document).on("click", ".copy_info", function () {
+    var $temp = $("<input>");
+    $("body").append($temp);
+    $temp.val($(".meeting_url").text()).select();
+    document.execCommand("copy");
+    $($temp).remove();
+    $(".link-conf").show();
+    setTimeout(function () {
+      $(".link-conf").hide();
+    }, 2000);
   });
 
   // 외부 접근 가능 함수

@@ -138,11 +138,11 @@ img.signin-image {
     position: relative;
 }
 
-.g-detail {
+.g-details {
     position: absolute;
 }
 
-.g-detail {
+.g-details {
     position: absolute;
     width: 30vw;
     background-color: white;
@@ -225,7 +225,7 @@ img.signin-image {
     background-color: rgb(14 6 6);
     position: fixed;
     width: 30%;
-    /* height: 30%; */
+    height: 30%;
     top: 20.5%;
     left: 35.5%;
     display: block;
