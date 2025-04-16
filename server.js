@@ -10,6 +10,9 @@ var server = app.listen(3000, function () {
   console.log("listening to requests on port 3000");
 });
 
+const fs = require("fs"); // 파일 시스템 모듈 불러오기
+const fileUpload = require("express-fileupload"); // 파일 업로드를 위한 미들웨어
+
 // Socket.IO 서버 생성 및 기존 HTTP 서버에 연결
 // allowEIO3: 오래된 클라이언트(EIOv3, 예: 구형 브라우저나 클라이언트 앱)와 호환성 유지
 const io = require("socket.io")(server, {
@@ -113,6 +116,26 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("fileTransferToOther", (msg) => {
+    console.log("sendMessage", msg);
+    var mUser = userConnections.find((p) => p.connectionId == socket.id); // 현재 소켓 ID에 해당하는 사용자 정보 찾기
+    if (mUser) {
+      console.log(mUser);
+      var meetingid = mUser.meeting_id; // 회의 ID 저장
+      var from = mUser.user_id; // 사용자 이름 저장
+      var list = userConnections.filter((p) => p.meeting_id == meetingid); // 같은 회의 ID를 가진 사용자 목록 필터링
+      list.forEach((v) => {
+        // 각 사용자에게 메시지 전송
+        socket.to(v.connectionId).emit("showFileMessage", {
+          username: msg.username,
+          meetingid: msg.meetingid,
+          filePath: msg.filePath,
+          fileName: msg.fileName,
+        });
+      });
+    }
+  });
+
   socket.on("screen_share_stopped", (data) => {
     userConnections
       .filter((u) => u.meeting_id === data.meetingid && u.user_id !== data.from)
@@ -129,4 +152,31 @@ io.on("connection", (socket) => {
         }
       });
   });
+});
+
+app.use(fileUpload()); // 파일 업로드 미들웨어 사용
+// body-parser 미들웨어 설정: POST 요청의 본문을 JSON 형식으로 파싱
+app.post("/attachImg", function (req, res) {
+  var data = req.body;
+  var imageFile = req.files.zipfile;
+  console.log("attachImg", data, imageFile);
+  var dir = "public/attachment/" + data.meetingid + "/";
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  imageFile.mv(
+    "public/attachment/" + data.meetingid + "/" + imageFile.name,
+    function (error) {
+      if (error) {
+        console.log("File upload error", error);
+      } else {
+        console.log("File uploaded successfully");
+        res.json({
+          status: "success",
+          filePath: "/attachment/" + data.meetingid + "/" + imageFile.name,
+        });
+      }
+    }
+  );
 });

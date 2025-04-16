@@ -496,6 +496,29 @@ var MyApp = (function () {
       app.setNewConnection(data.connId);
     });
 
+    socket.on("showFileMessage", function (data) {
+      var time = new Date();
+      var lTime = time.toLocaleTimeString("ko-KR", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      });
+      var attachFileAreaForOther = document.querySelector(".show-attach-file");
+      attachFileAreaForOther.innerHTML =
+        '<div class="left-align" style="display: flex; align-items: center;">' +
+        '<img src="public/Assets/images/other.jpg" style="height:40px;width:40px;" class="caller-image circle">' +
+        '<div style="font-weight:600;margin:0 5px;">' +
+        data.username +
+        "</div>:" +
+        "<div>" +
+        '<a style="color:#007bff;" href="' +
+        data.filePath +
+        '" download>' +
+        data.fileName +
+        "</a>" +
+        "</div></div><br/";
+    });
+
     // 다른 유저가 접속했음을 알림 받았을 때
     socket.on("inform_me_about_other_user", (other_users) => {
       var userNumber = other_users.length; // 현재 접속한 사용자 수
@@ -703,6 +726,62 @@ var MyApp = (function () {
     $(".g-details-heading-show-attachment").hide();
     $(this).addClass("active");
     $(".g-details-heading-attachment").removeClass("active");
+  });
+
+  var baseUrl = window.location.origin;
+
+  $(document).on("change", ".custom-file-input", function () {
+    var fileName = $(this).val().split("\\").pop();
+    $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+  });
+
+  $(document).on("click", ".share-attach", function (e) {
+    e.preventDefault();
+    var att_img = $("#customFile").prop("files")[0];
+    var formData = new FormData();
+    formData.append("zipfile", att_img);
+    formData.append("meetingid", meeting_id);
+    formData.append("username", user_id);
+    console.log("formData", formData);
+    console.log("baseUrl", baseUrl);
+    $.ajax({
+      url: baseUrl + "/attachimg",
+      type: "POST",
+      data: formData,
+      contentType: false,
+      processData: false,
+      success: function (response) {
+        console.log("response");
+      },
+      error: function () {
+        console.log("error");
+      },
+    });
+
+    var attachFileArea = document.querySelector(".show-attach-file");
+    var attachFileName = $("#customFile").val().split("\\").pop();
+    var attachFilePath =
+      "public/attachment/" + meeting_id + "/" + attachFileName;
+    attachFileArea.innerHTML =
+      '<div class="left-align" style="display: flex; align-items: center;">' +
+      '<img src="public/Assets/images/other.jpg" style="height:40px;width:40px;" class="caller-image circle">' +
+      '<div style="font-weight:600;margin:0 5px;">' +
+      user_id +
+      "</div>:" +
+      "<div>" +
+      '<a style="color:#007bff;" href="' +
+      attachFilePath +
+      '" download>' +
+      attachFileName +
+      "</a>" +
+      "</div></div><br/";
+    $("label.custom-file-label").text("");
+    socket.emit("fileTransferToOther", {
+      username: user_id,
+      meetingid: meeting_id,
+      filePath: attachFilePath,
+      fileName: attachFileName,
+    });
   });
 
   // 외부 접근 가능 함수
