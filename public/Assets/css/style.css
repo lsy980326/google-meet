@@ -123,7 +123,7 @@ img.signin-image {
 }
 
 .g-bottom {
-    height: 15vh;
+    height: 10vh;
     margin: 0 -10px !important;
     padding: 0 20px;
     box-shadow: 0px 0px 5px black;
@@ -291,6 +291,15 @@ video{
     width: 300px;
     /* height: 300px; */
 }
+
+.recording-show{
+    position:absolute;
+    margin-right: 20px;
+    margin-bottom: 132px;
+    /* width: 100px; */
+    display: none;
+}
+
 .recording-wrap {
     position: absolute;
     font-size: 14px;

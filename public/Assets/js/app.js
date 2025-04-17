@@ -784,6 +784,84 @@ var MyApp = (function () {
     });
   });
 
+  $(document).on("click", ".option-icon", function () {
+    $(".recording-show").toggle(300);
+  });
+
+  $(document).on("click", ".start-record", function () {
+    $(this)
+      .removeClass()
+      .addClass("stop-record btn-danger text-dark")
+      .text("Stop Recording");
+    startRecording();
+  });
+
+  $(document).on("click", ".stop-record", function () {
+    $(this)
+      .removeClass()
+      .addClass("start-record btn-dark text-danger")
+      .text("Start Recording");
+    mediaRecorder.stop(); // 녹화 중지
+  });
+
+  var mediaRecorder;
+  var chunks = [];
+
+  async function captureScreen(
+    mediaContraints = {
+      video: true,
+    }
+  ) {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia(
+      mediaContraints
+    );
+    return screenStream;
+  }
+
+  async function captureAudio(
+    mediaContraints = {
+      video: true,
+      audio: true,
+    }
+  ) {
+    const audioStream = await navigator.mediaDevices.getUserMedia(
+      mediaContraints
+    );
+    return audioStream;
+  }
+
+  async function startRecording() {
+    chunks = []; // 녹화 데이터 초기화
+    const screenStream = await captureScreen();
+    const audioStream = await captureAudio();
+    const stream = new MediaStream([
+      ...screenStream.getTracks(),
+      ...audioStream.getTracks(),
+    ]); // 화면과 오디오 스트림 결합
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start(); // 녹화 시작
+
+    mediaRecorder.onstop = function (e) {
+      var clipName = prompt("Enter a name for your recording", "My Recording");
+      stream.getTracks().forEach((track) => track.stop()); // 스트림 종료
+      const blob = new Blob(chunks, { type: "video/webm" }); // 녹화된 데이터 결합
+      const url = window.URL.createObjectURL(blob); // Blob URL 생성
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = clipName + ".webm"; // 다운로드 파일 이름
+      document.body.appendChild(a);
+      a.click(); // 다운로드 실행
+      setTimeout(() => {
+        document.body.removeChild(a); // 다운로드 후 링크 제거
+        window.URL.revokeObjectURL(url); // Blob URL 해제
+      }, 100);
+    };
+    mediaRecorder.ondataavailable = function (e) {
+      chunks.push(e.data); // 녹화된 데이터 저장
+    };
+  }
+
   // 외부 접근 가능 함수
   return {
     _init: function (uid, mid) {
